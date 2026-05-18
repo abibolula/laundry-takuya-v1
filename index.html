@@ -562,57 +562,9 @@ tr:hover td { background: var(--glass); }
 }
 
 /* ─────────────────────────────────────────
-   PRINT STYLES — full single page
+   PRINT — tidak dipakai (diganti iframe print)
 ───────────────────────────────────────── */
-@media print {
-  @page {
-    size: 80mm auto;
-    margin: 0;
-  }
-
-  html, body {
-    width: 80mm;
-    margin: 0 !important;
-    padding: 0 !important;
-    background: #fff !important;
-    -webkit-print-color-adjust: exact;
-    print-color-adjust: exact;
-  }
-
-  /* Hide everything */
-  body > *:not(#nota-print-wrapper) { display: none !important; }
-
-  /* Show only the print wrapper */
-  #nota-print-wrapper {
-    display: block !important;
-    position: static !important;
-    width: 80mm !important;
-    min-height: unset !important;
-    margin: 0 !important;
-    padding: 6mm 8mm 10mm !important;
-    background: #fff !important;
-    color: #000 !important;
-    font-family: 'Noto Sans JP', 'Courier New', monospace !important;
-    font-size: 10pt !important;
-    line-height: 1.5 !important;
-    page-break-after: avoid !important;
-    page-break-inside: avoid !important;
-  }
-
-  #nota-print-wrapper .nota-brand { color: #c00 !important; font-size: 14pt !important; }
-  #nota-print-wrapper .nota-kanji { color: #555 !important; font-size: 10pt !important; }
-  #nota-print-wrapper .nota-row span:first-child { color: #555 !important; }
-  #nota-print-wrapper .nota-row span:last-child { color: #000 !important; }
-  #nota-print-wrapper .nota-total-row span:first-child { color: #000 !important; font-size: 11pt !important; }
-  #nota-print-wrapper .nota-total-row span:last-child { color: #c00 !important; font-size: 13pt !important; }
-  #nota-print-wrapper .nota-divider { border-top: 1px dashed #999 !important; }
-  #nota-print-wrapper .nota-footer { color: #555 !important; font-size: 9pt !important; }
-  #nota-print-wrapper .nota-qr {
-    background: repeating-linear-gradient(0deg,#ccc,#ccc 3px,transparent 3px,transparent 6px),
-                repeating-linear-gradient(90deg,#ccc,#ccc 3px,transparent 3px,transparent 6px) !important;
-    border: 1.5px solid #999 !important;
-  }
-}
+#nota-print-wrapper { display: none !important; }
 
 /* ─────────────────────────────────────────
    RESPONSIVE
@@ -1188,6 +1140,7 @@ function openNota(orderId) {
   if (!order) return;
   const html = buildNotaHTML(order);
   document.getElementById('notaContent').innerHTML = html;
+  document.getElementById('notaModal').dataset.orderId = orderId;
   document.getElementById('notaModal').classList.add('open');
 }
 
@@ -1231,12 +1184,258 @@ function buildNotaHTML(order) {
   `;
 }
 
+/* ── Cetak via iframe — full A4, 1 halaman ── */
+function printViaIframe(orderData) {
+  const notaHTML = buildNotaHTML(orderData);
+
+  const iframeDoc = `<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<title>Nota - ${orderData.nama}</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Shippori+Mincho:wght@600;700&display=swap');
+
+  @page {
+    size: A4 portrait;
+    margin: 0;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    width: 210mm;
+    height: 297mm;
+    background: #fff;
+    font-family: 'Noto Sans JP', sans-serif;
+    font-size: 11pt;
+    color: #111;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* ── Outer page fill ── */
+  .page {
+    width: 210mm;
+    height: 297mm;
+    background: #fff;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    padding: 18mm 0 10mm;
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* ── Decorative top bar ── */
+  .page::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 8mm;
+    background: linear-gradient(90deg, #8B0000, #C8102E, #E8334A, #C8102E, #8B0000);
+  }
+
+  /* ── Decorative bottom bar ── */
+  .page::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 5mm;
+    background: linear-gradient(90deg, #8B0000, #C8102E, #8B0000);
+  }
+
+  /* ── Corner ornaments ── */
+  .corner {
+    position: absolute;
+    width: 20mm; height: 20mm;
+    opacity: 0.12;
+  }
+  .corner-tl { top: 10mm; left: 10mm; border-top: 2px solid #C8102E; border-left: 2px solid #C8102E; }
+  .corner-tr { top: 10mm; right: 10mm; border-top: 2px solid #C8102E; border-right: 2px solid #C8102E; }
+  .corner-bl { bottom: 7mm; left: 10mm; border-bottom: 2px solid #C8102E; border-left: 2px solid #C8102E; }
+  .corner-br { bottom: 7mm; right: 10mm; border-bottom: 2px solid #C8102E; border-right: 2px solid #C8102E; }
+
+  /* ── Nota card ── */
+  .card {
+    width: 120mm;
+    background: #fff;
+    border: 1.5px solid #ddd;
+    border-radius: 3mm;
+    padding: 8mm 8mm 6mm;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.10);
+    position: relative;
+  }
+
+  /* Red left accent */
+  .card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; bottom: 0;
+    width: 2mm;
+    background: #C8102E;
+    border-radius: 3mm 0 0 3mm;
+  }
+
+  .nota-header { text-align: center; margin-bottom: 5mm; }
+  .nota-brand {
+    font-family: 'Shippori Mincho', serif;
+    font-size: 18pt; font-weight: 700;
+    color: #C8102E;
+    letter-spacing: 0.5pt;
+  }
+  .nota-kanji {
+    font-family: 'Shippori Mincho', serif;
+    font-size: 10pt; color: #888;
+    margin-top: 1mm; letter-spacing: 1pt;
+  }
+  .nota-meta { font-size: 8pt; color: #888; margin-top: 1.5mm; line-height: 1.6; }
+
+  .nota-divider {
+    border: none;
+    border-top: 1px dashed #bbb;
+    margin: 3mm 0;
+  }
+  .nota-divider.solid {
+    border-top: 1.5px solid #C8102E;
+    opacity: 0.3;
+  }
+
+  .nota-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    padding: 1.2mm 0;
+    font-size: 9.5pt;
+  }
+  .nota-row span:first-child { color: #666; width: 38mm; flex-shrink: 0; }
+  .nota-row span:last-child { font-weight: 500; text-align: right; }
+
+  .nota-total-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 2mm 0;
+    background: #FFF0F0;
+    margin: 0 -2mm;
+    padding-left: 2mm; padding-right: 2mm;
+    border-radius: 1.5mm;
+  }
+  .nota-total-row span:first-child { font-weight: 700; font-size: 11pt; color: #111; }
+  .nota-total-row span:last-child { font-weight: 700; font-size: 14pt; color: #C8102E; }
+
+  /* ── QR decoration ── */
+  .nota-qr {
+    width: 18mm; height: 18mm;
+    margin: 3mm auto;
+    background:
+      repeating-linear-gradient(0deg, #ccc, #ccc 2px, transparent 2px, transparent 5px),
+      repeating-linear-gradient(90deg, #ccc, #ccc 2px, transparent 2px, transparent 5px);
+    border: 1.5px solid #bbb;
+    border-radius: 1.5mm;
+    position: relative;
+  }
+  .nota-qr::after {
+    content: 'QR';
+    position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 7pt; color: #aaa; font-weight: 700;
+    background: rgba(255,255,255,0.7);
+  }
+
+  .nota-footer {
+    text-align: center;
+    font-size: 8.5pt;
+    color: #888;
+    margin-top: 2mm;
+    line-height: 1.8;
+  }
+
+  /* ── Watermark kanji ── */
+  .watermark {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%) rotate(-30deg);
+    font-family: 'Shippori Mincho', serif;
+    font-size: 80pt;
+    color: #C8102E;
+    opacity: 0.03;
+    pointer-events: none;
+    letter-spacing: -5pt;
+    white-space: nowrap;
+    z-index: 0;
+  }
+
+  /* ── Sakura pattern strip ── */
+  .sakura-strip {
+    display: flex; justify-content: center; gap: 6mm;
+    margin: 3mm 0;
+    font-size: 10pt;
+    opacity: 0.35;
+  }
+
+  /* ── Bottom info ── */
+  .bottom-info {
+    margin-top: 6mm;
+    text-align: center;
+    font-size: 8pt;
+    color: #aaa;
+  }
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="watermark">洗濯</div>
+  <div class="corner corner-tl"></div>
+  <div class="corner corner-tr"></div>
+  <div class="corner corner-bl"></div>
+  <div class="corner corner-br"></div>
+
+  <div class="card">
+    ${notaHTML}
+  </div>
+
+  <div class="sakura-strip">🌸 ✦ 🌸 ✦ 🌸 ✦ 🌸</div>
+  <div class="bottom-info">Terima kasih atas kepercayaan Anda &nbsp;·&nbsp; Sen Takuya Laundry</div>
+</div>
+</body>
+</html>`;
+
+  // Open print in hidden iframe
+  let iframe = document.getElementById('__printFrame');
+  if (iframe) iframe.remove();
+  iframe = document.createElement('iframe');
+  iframe.id = '__printFrame';
+  iframe.style.cssText = 'position:fixed;top:-9999px;left:-9999px;width:1px;height:1px;border:none;opacity:0;';
+  document.body.appendChild(iframe);
+
+  const win = iframe.contentWindow || iframe.contentDocument;
+  const doc = win.document || iframe.contentDocument;
+  doc.open();
+  doc.write(iframeDoc);
+  doc.close();
+
+  // Wait for fonts to load then print
+  iframe.onload = function() {
+    setTimeout(() => {
+      try {
+        iframe.contentWindow.focus();
+        iframe.contentWindow.print();
+      } catch(e) {
+        window.print();
+      }
+    }, 800);
+  };
+}
+
 function doPrint() {
-  // Sync content to hidden print wrapper then print
-  const content = document.getElementById('notaContent').innerHTML;
-  document.getElementById('notaPrintBody').innerHTML = content;
+  // Get order id stored in modal
+  const orderId = document.getElementById('notaModal').dataset.orderId;
+  const order = orderId ? orders.find(o => o.id === orderId) : null;
+  if (!order) { toast('Data order tidak ditemukan', 'error'); return; }
   closeModal();
-  setTimeout(() => { window.print(); }, 120);
+  setTimeout(() => printViaIframe(order), 150);
 }
 
 function printFromForm() {
@@ -1263,8 +1462,7 @@ function printFromForm() {
     tgl_masuk: new Date().toISOString(),
     status: 'Diproses',
   };
-  document.getElementById('notaPrintBody').innerHTML = buildNotaHTML(order);
-  setTimeout(() => { window.print(); }, 80);
+  printViaIframe(order);
 }
 
 /* ═══════════════════════════════════════════
