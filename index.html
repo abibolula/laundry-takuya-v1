@@ -1,0 +1,1464 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>洗濯屋 Sen Takuya — Kasir Laundry</title>
+<style>
+/* ─────────────────────────────────────────
+   FONTS
+───────────────────────────────────────── */
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=Shippori+Mincho:wght@400;600;700&display=swap');
+
+/* ─────────────────────────────────────────
+   CSS VARIABLES
+───────────────────────────────────────── */
+:root {
+  --red: #C8102E;
+  --red-light: #E8334A;
+  --red-glow: rgba(200,16,46,0.35);
+  --red-subtle: rgba(200,16,46,0.08);
+  --black: #0A0A0C;
+  --dark: #12121A;
+  --dark2: #1A1A26;
+  --dark3: #22222E;
+  --glass: rgba(255,255,255,0.04);
+  --glass2: rgba(255,255,255,0.07);
+  --glass3: rgba(255,255,255,0.12);
+  --border: rgba(255,255,255,0.08);
+  --border2: rgba(255,255,255,0.14);
+  --cream: #F5F0E8;
+  --cream2: #EDE6D8;
+  --white: #FFFFFF;
+  --text: rgba(255,255,255,0.92);
+  --text2: rgba(255,255,255,0.60);
+  --text3: rgba(255,255,255,0.35);
+  --shadow: 0 8px 32px rgba(0,0,0,0.5);
+  --shadow2: 0 4px 16px rgba(0,0,0,0.3);
+  --radius: 16px;
+  --radius2: 10px;
+  --transition: 0.22s cubic-bezier(.4,0,.2,1);
+  --font: 'Noto Sans JP', sans-serif;
+  --font2: 'Shippori Mincho', serif;
+}
+.light-mode {
+  --black: #F7F4EF;
+  --dark: #EDEAE3;
+  --dark2: #E4E0D6;
+  --dark3: #DDD9CE;
+  --glass: rgba(255,255,255,0.6);
+  --glass2: rgba(255,255,255,0.75);
+  --glass3: rgba(255,255,255,0.9);
+  --border: rgba(0,0,0,0.08);
+  --border2: rgba(0,0,0,0.14);
+  --text: rgba(0,0,0,0.88);
+  --text2: rgba(0,0,0,0.55);
+  --text3: rgba(0,0,0,0.30);
+  --shadow: 0 8px 32px rgba(0,0,0,0.12);
+  --shadow2: 0 4px 16px rgba(0,0,0,0.08);
+}
+
+/* ─────────────────────────────────────────
+   RESET & BASE
+───────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: var(--font);
+  background: var(--black);
+  color: var(--text);
+  min-height: 100vh;
+  overflow-x: hidden;
+  transition: background var(--transition), color var(--transition);
+}
+
+/* ─────────────────────────────────────────
+   ANIMATED BACKGROUND
+───────────────────────────────────────── */
+.bg-layer {
+  position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  background:
+    radial-gradient(ellipse 80% 60% at 15% 20%, rgba(200,16,46,0.12) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 80% at 85% 80%, rgba(200,16,46,0.08) 0%, transparent 60%),
+    radial-gradient(ellipse 100% 100% at 50% 50%, var(--dark2) 0%, var(--black) 100%);
+  animation: bgPulse 8s ease-in-out infinite alternate;
+}
+@keyframes bgPulse {
+  from { opacity: 1; }
+  to { opacity: 0.85; }
+}
+.bg-pattern {
+  position: fixed; inset: 0; z-index: 0; pointer-events: none; opacity: 0.025;
+  background-image:
+    repeating-linear-gradient(0deg, transparent, transparent 39px, rgba(200,16,46,1) 39px, rgba(200,16,46,1) 40px),
+    repeating-linear-gradient(90deg, transparent, transparent 39px, rgba(200,16,46,1) 39px, rgba(200,16,46,1) 40px);
+}
+.light-mode .bg-pattern { opacity: 0.04; }
+
+/* ─────────────────────────────────────────
+   SAKURA PETALS
+───────────────────────────────────────── */
+.sakura-container { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
+.petal {
+  position: absolute; top: -30px;
+  width: 12px; height: 12px;
+  background: radial-gradient(ellipse at 40% 30%, #FFB7C5, #E8668A);
+  border-radius: 50% 0 50% 0;
+  opacity: 0;
+  animation: fall linear infinite;
+}
+.petal::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+  background: inherit; border-radius: inherit;
+  transform: rotate(90deg);
+}
+@keyframes fall {
+  0% { opacity: 0; transform: translateX(0) translateY(-30px) rotate(0deg); }
+  10% { opacity: 0.7; }
+  90% { opacity: 0.4; }
+  100% { opacity: 0; transform: translateX(60px) translateY(100vh) rotate(720deg); }
+}
+
+/* ─────────────────────────────────────────
+   WRAPPER
+───────────────────────────────────────── */
+#app { position: relative; z-index: 1; min-height: 100vh; }
+
+/* ─────────────────────────────────────────
+   HEADER
+───────────────────────────────────────── */
+.site-header {
+  position: sticky; top: 0; z-index: 100;
+  background: rgba(10,10,12,0.82);
+  backdrop-filter: blur(20px) saturate(1.5);
+  border-bottom: 1px solid var(--border);
+  padding: 0 20px;
+  transition: background var(--transition);
+}
+.light-mode .site-header { background: rgba(247,244,239,0.85); }
+.header-inner {
+  max-width: 900px; margin: 0 auto;
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 0;
+}
+.brand-mark {
+  width: 42px; height: 42px; flex-shrink: 0;
+  background: var(--red);
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--font2);
+  font-size: 18px; color: #fff;
+  box-shadow: 0 0 16px var(--red-glow);
+  letter-spacing: -1px;
+}
+.brand-info { flex: 1; min-width: 0; }
+.brand-name {
+  font-family: var(--font2);
+  font-size: 15px; font-weight: 700;
+  color: var(--text);
+  letter-spacing: 0.5px;
+  line-height: 1.2;
+}
+.brand-sub { font-size: 10px; color: var(--text3); letter-spacing: 1.5px; text-transform: uppercase; }
+.header-right { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+.clock-box {
+  text-align: right;
+  font-size: 11px; color: var(--text2);
+  line-height: 1.4;
+}
+.clock-time { font-size: 15px; font-weight: 700; color: var(--text); font-variant-numeric: tabular-nums; }
+.status-badge {
+  font-size: 10px; font-weight: 600;
+  padding: 3px 8px; border-radius: 20px;
+  letter-spacing: 0.5px;
+}
+.status-open { background: rgba(16,185,129,0.15); color: #34D399; border: 1px solid rgba(16,185,129,0.25); }
+.status-closed { background: rgba(200,16,46,0.15); color: var(--red-light); border: 1px solid rgba(200,16,46,0.25); }
+.dark-toggle {
+  width: 36px; height: 36px; border-radius: 50%;
+  background: var(--glass2); border: 1px solid var(--border2);
+  cursor: pointer; font-size: 16px;
+  display: flex; align-items: center; justify-content: center;
+  transition: all var(--transition);
+}
+.dark-toggle:hover { background: var(--glass3); transform: scale(1.05); }
+
+/* ─────────────────────────────────────────
+   NAV TABS
+───────────────────────────────────────── */
+.nav-tabs {
+  max-width: 900px; margin: 0 auto;
+  display: flex; gap: 0;
+  border-bottom: 1px solid var(--border);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.nav-tabs::-webkit-scrollbar { display: none; }
+.nav-tab {
+  padding: 10px 18px; font-size: 12px; font-weight: 600;
+  color: var(--text3); cursor: pointer;
+  border-bottom: 2px solid transparent;
+  white-space: nowrap; letter-spacing: 0.3px;
+  transition: all var(--transition);
+  position: relative;
+}
+.nav-tab:hover { color: var(--text2); }
+.nav-tab.active { color: var(--red-light); border-bottom-color: var(--red); }
+.tab-badge {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 16px; height: 16px; border-radius: 50%;
+  background: var(--red); color: #fff;
+  font-size: 9px; font-weight: 700;
+  margin-left: 5px; vertical-align: middle;
+}
+
+/* ─────────────────────────────────────────
+   MAIN CONTENT
+───────────────────────────────────────── */
+.main { max-width: 900px; margin: 0 auto; padding: 20px 16px 100px; }
+.tab-panel { display: none; }
+.tab-panel.active { display: block; animation: fadeIn 0.28s ease; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
+/* ─────────────────────────────────────────
+   DASHBOARD
+───────────────────────────────────────── */
+.stats-grid {
+  display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px;
+  margin-bottom: 20px;
+}
+.stat-card {
+  background: var(--glass2); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 16px;
+  backdrop-filter: blur(12px);
+  transition: all var(--transition);
+  position: relative; overflow: hidden;
+}
+.stat-card::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0; height: 2px;
+  background: linear-gradient(90deg, transparent, var(--red), transparent);
+  opacity: 0;
+  transition: opacity var(--transition);
+}
+.stat-card:hover { border-color: var(--border2); transform: translateY(-2px); }
+.stat-card:hover::before { opacity: 1; }
+.stat-icon { font-size: 22px; margin-bottom: 8px; }
+.stat-value { font-size: 20px; font-weight: 700; color: var(--text); line-height: 1; margin-bottom: 4px; }
+.stat-label { font-size: 10px; color: var(--text3); letter-spacing: 1px; text-transform: uppercase; }
+.stat-card.highlight .stat-value { color: var(--red-light); }
+
+/* ─────────────────────────────────────────
+   SECTION HEADING
+───────────────────────────────────────── */
+.section-head {
+  display: flex; align-items: center; gap: 10px;
+  margin-bottom: 14px;
+}
+.section-title {
+  font-family: var(--font2);
+  font-size: 16px; font-weight: 600;
+  color: var(--text);
+  letter-spacing: 0.3px;
+}
+.section-line { flex: 1; height: 1px; background: var(--border); }
+.section-tag {
+  font-size: 10px; color: var(--red-light);
+  letter-spacing: 1.5px; text-transform: uppercase;
+}
+
+/* ─────────────────────────────────────────
+   FORM
+───────────────────────────────────────── */
+.form-card {
+  background: var(--glass); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 20px;
+  backdrop-filter: blur(12px);
+}
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+.form-row.single { grid-template-columns: 1fr; }
+.form-row.triple { grid-template-columns: 1fr 1fr 1fr; }
+.field { display: flex; flex-direction: column; gap: 5px; }
+.field label {
+  font-size: 10px; font-weight: 600;
+  color: var(--text3); letter-spacing: 1px; text-transform: uppercase;
+}
+.field input, .field select, .field textarea {
+  background: var(--glass2); border: 1px solid var(--border);
+  border-radius: var(--radius2); padding: 10px 12px;
+  font-family: var(--font); font-size: 13px; color: var(--text);
+  outline: none; transition: all var(--transition);
+  width: 100%;
+  -webkit-appearance: none;
+}
+.light-mode .field input,
+.light-mode .field select,
+.light-mode .field textarea { color: var(--text); }
+.field input:focus, .field select:focus, .field textarea:focus {
+  border-color: var(--red);
+  box-shadow: 0 0 0 3px var(--red-glow);
+  background: var(--glass3);
+}
+.field input::placeholder, .field textarea::placeholder { color: var(--text3); }
+.field select option { background: #1A1A26; color: #fff; }
+.light-mode .field select option { background: #EDE6D8; color: #111; }
+.field textarea { resize: vertical; min-height: 64px; }
+.field .readonly-val {
+  padding: 10px 12px; border-radius: var(--radius2);
+  background: var(--glass); border: 1px solid var(--border);
+  font-size: 13px; color: var(--text2);
+  min-height: 40px;
+}
+
+/* Summary box */
+.calc-summary {
+  background: var(--red-subtle); border: 1px solid rgba(200,16,46,0.2);
+  border-radius: var(--radius2); padding: 14px;
+  margin: 14px 0;
+}
+.calc-row { display: flex; justify-content: space-between; align-items: center; padding: 4px 0; }
+.calc-row span:first-child { font-size: 12px; color: var(--text2); }
+.calc-row span:last-child { font-size: 13px; font-weight: 600; color: var(--text); }
+.calc-row.total span:first-child { font-size: 13px; color: var(--text); font-weight: 700; }
+.calc-row.total span:last-child { font-size: 16px; color: var(--red-light); }
+.calc-divider { border: none; border-top: 1px solid rgba(200,16,46,0.2); margin: 6px 0; }
+
+/* Buttons */
+.btn-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 16px; }
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  padding: 10px 16px; border-radius: var(--radius2);
+  font-family: var(--font); font-size: 12px; font-weight: 700;
+  letter-spacing: 0.5px; cursor: pointer; border: none;
+  transition: all var(--transition); white-space: nowrap;
+  text-decoration: none;
+}
+.btn:active { transform: scale(0.96); }
+.btn-primary {
+  background: var(--red); color: #fff;
+  box-shadow: 0 4px 16px var(--red-glow);
+}
+.btn-primary:hover { background: var(--red-light); box-shadow: 0 6px 24px var(--red-glow); }
+.btn-ghost {
+  background: var(--glass2); border: 1px solid var(--border2);
+  color: var(--text2);
+}
+.btn-ghost:hover { background: var(--glass3); color: var(--text); border-color: var(--border2); }
+.btn-green {
+  background: rgba(16,185,129,0.15); border: 1px solid rgba(16,185,129,0.3);
+  color: #34D399;
+}
+.btn-green:hover { background: rgba(16,185,129,0.25); }
+.btn-blue {
+  background: rgba(59,130,246,0.15); border: 1px solid rgba(59,130,246,0.3);
+  color: #60A5FA;
+}
+.btn-blue:hover { background: rgba(59,130,246,0.25); }
+.btn-sm { padding: 6px 10px; font-size: 11px; }
+.btn-icon { padding: 7px 10px; }
+
+/* ─────────────────────────────────────────
+   ORDER TABLE
+───────────────────────────────────────── */
+.filter-bar {
+  display: flex; gap: 8px; flex-wrap: wrap;
+  align-items: center; margin-bottom: 14px;
+}
+.filter-bar input, .filter-bar select {
+  background: var(--glass2); border: 1px solid var(--border);
+  border-radius: var(--radius2); padding: 8px 12px;
+  font-family: var(--font); font-size: 12px; color: var(--text);
+  outline: none; transition: all var(--transition);
+  -webkit-appearance: none;
+}
+.filter-bar input:focus, .filter-bar select:focus { border-color: var(--red); }
+.filter-bar input { flex: 1; min-width: 140px; }
+.filter-bar input::placeholder { color: var(--text3); }
+.filter-bar select option { background: #1A1A26; }
+.light-mode .filter-bar select option { background: #EDE6D8; }
+.filter-date-group { display: flex; align-items: center; gap: 6px; }
+.filter-date-group label { font-size: 10px; color: var(--text3); letter-spacing: 0.5px; white-space: nowrap; }
+
+.table-wrap { overflow-x: auto; border-radius: var(--radius); border: 1px solid var(--border); }
+table { width: 100%; border-collapse: collapse; }
+thead { background: var(--dark3); }
+th {
+  padding: 10px 12px; text-align: left;
+  font-size: 10px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase;
+  color: var(--text3); white-space: nowrap;
+}
+td {
+  padding: 11px 12px; font-size: 12px; color: var(--text2);
+  border-top: 1px solid var(--border);
+  vertical-align: middle;
+}
+tr:hover td { background: var(--glass); }
+.td-name { font-weight: 600; color: var(--text); font-size: 13px; }
+.td-total { font-weight: 700; color: var(--text); }
+
+/* Status badges */
+.badge {
+  display: inline-block; padding: 3px 8px; border-radius: 20px;
+  font-size: 10px; font-weight: 700; letter-spacing: 0.3px;
+  white-space: nowrap;
+}
+.badge-diproses { background: rgba(245,158,11,0.15); color: #FCD34D; border: 1px solid rgba(245,158,11,0.25); }
+.badge-dicuci { background: rgba(59,130,246,0.15); color: #93C5FD; border: 1px solid rgba(59,130,246,0.25); }
+.badge-selesai { background: rgba(16,185,129,0.15); color: #6EE7B7; border: 1px solid rgba(16,185,129,0.25); }
+.badge-diambil { background: rgba(107,114,128,0.15); color: #9CA3AF; border: 1px solid rgba(107,114,128,0.25); }
+
+.status-select {
+  background: transparent; border: none;
+  font-family: var(--font); font-size: 10px; font-weight: 700;
+  color: inherit; cursor: pointer; outline: none;
+  padding: 2px 4px; border-radius: 6px;
+  -webkit-appearance: none;
+}
+.actions-cell { display: flex; gap: 5px; align-items: center; }
+
+/* Empty state */
+.empty-state {
+  text-align: center; padding: 50px 20px;
+  color: var(--text3);
+}
+.empty-icon { font-size: 48px; margin-bottom: 12px; opacity: 0.5; }
+.empty-title { font-family: var(--font2); font-size: 16px; color: var(--text2); margin-bottom: 6px; }
+.empty-sub { font-size: 12px; }
+
+/* Progress bar */
+.progress-wrap { margin-top: 6px; }
+.progress-bar {
+  height: 3px; background: var(--border);
+  border-radius: 4px; overflow: hidden;
+}
+.progress-fill {
+  height: 100%; border-radius: 4px;
+  transition: width 0.5s ease;
+}
+.p-diproses { background: linear-gradient(90deg, #F59E0B, #FCD34D); width: 25%; }
+.p-dicuci { background: linear-gradient(90deg, #3B82F6, #93C5FD); width: 50%; }
+.p-selesai { background: linear-gradient(90deg, #10B981, #6EE7B7); width: 85%; }
+.p-diambil { background: linear-gradient(90deg, #6B7280, #9CA3AF); width: 100%; }
+
+/* ─────────────────────────────────────────
+   TOAST
+───────────────────────────────────────── */
+#toast-container {
+  position: fixed; bottom: 24px; right: 16px; z-index: 9999;
+  display: flex; flex-direction: column; gap: 8px;
+  pointer-events: none;
+}
+.toast {
+  display: flex; align-items: center; gap: 10px;
+  padding: 12px 16px; border-radius: 12px;
+  background: var(--dark3); border: 1px solid var(--border2);
+  backdrop-filter: blur(16px);
+  font-size: 13px; color: var(--text);
+  box-shadow: var(--shadow);
+  animation: toastIn 0.3s cubic-bezier(.4,0,.2,1);
+  max-width: 280px;
+  pointer-events: auto;
+}
+.toast.hide { animation: toastOut 0.3s cubic-bezier(.4,0,.2,1) forwards; }
+@keyframes toastIn { from { opacity: 0; transform: translateX(100%); } to { opacity: 1; transform: translateX(0); } }
+@keyframes toastOut { to { opacity: 0; transform: translateX(100%); } }
+.toast-icon { font-size: 18px; flex-shrink: 0; }
+.toast-success .toast-icon::after { content: '✅'; }
+.toast-error .toast-icon::after { content: '❌'; }
+.toast-info .toast-icon::after { content: 'ℹ️'; }
+.toast-warn .toast-icon::after { content: '⚠️'; }
+
+/* ─────────────────────────────────────────
+   LOADING
+───────────────────────────────────────── */
+#loading-screen {
+  position: fixed; inset: 0; z-index: 9998;
+  background: var(--black);
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 16px;
+}
+.loading-kanji { font-family: var(--font2); font-size: 64px; color: var(--red); animation: pulse 1s ease-in-out infinite; }
+@keyframes pulse { 0%,100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.7; transform: scale(0.95); } }
+.loading-text { font-size: 12px; color: var(--text3); letter-spacing: 3px; text-transform: uppercase; }
+#loading-screen.hide { animation: fadeOut 0.4s ease forwards; }
+@keyframes fadeOut { to { opacity: 0; pointer-events: none; } }
+
+/* ─────────────────────────────────────────
+   DASHBOARD RECENT
+───────────────────────────────────────── */
+.recent-list { display: flex; flex-direction: column; gap: 8px; }
+.recent-item {
+  display: flex; align-items: center; gap: 10px;
+  background: var(--glass2); border: 1px solid var(--border);
+  border-radius: var(--radius2); padding: 10px 12px;
+  transition: all var(--transition);
+}
+.recent-item:hover { border-color: var(--border2); background: var(--glass3); }
+.recent-icon { font-size: 18px; width: 32px; text-align: center; }
+.recent-info { flex: 1; min-width: 0; }
+.recent-name { font-size: 13px; font-weight: 600; color: var(--text); }
+.recent-meta { font-size: 11px; color: var(--text3); }
+.recent-amount { font-size: 13px; font-weight: 700; color: var(--red-light); }
+
+/* ─────────────────────────────────────────
+   FOOTER
+───────────────────────────────────────── */
+.site-footer {
+  text-align: center; padding: 30px 20px 50px;
+  border-top: 1px solid var(--border);
+}
+.footer-kanji { font-family: var(--font2); font-size: 24px; color: var(--red); margin-bottom: 6px; }
+.footer-text { font-size: 12px; color: var(--text3); letter-spacing: 1px; }
+.footer-copy { font-size: 10px; color: var(--text3); margin-top: 4px; }
+
+/* ─────────────────────────────────────────
+   MODAL (Nota Print)
+───────────────────────────────────────── */
+.modal-overlay {
+  position: fixed; inset: 0; z-index: 500;
+  background: rgba(0,0,0,0.7); backdrop-filter: blur(4px);
+  display: none; align-items: center; justify-content: center;
+  padding: 20px;
+}
+.modal-overlay.open { display: flex; }
+.modal-box {
+  background: var(--dark2); border: 1px solid var(--border2);
+  border-radius: var(--radius); padding: 24px;
+  width: 100%; max-width: 380px;
+  max-height: 85vh; overflow-y: auto;
+  box-shadow: var(--shadow);
+  animation: fadeIn 0.25s ease;
+}
+.modal-close {
+  display: flex; justify-content: flex-end;
+  margin-bottom: 12px;
+}
+
+/* ─────────────────────────────────────────
+   NOTA PRINT STYLE
+───────────────────────────────────────── */
+.nota-body {
+  font-family: var(--font); font-size: 12px;
+  color: var(--text);
+}
+.nota-header { text-align: center; margin-bottom: 14px; }
+.nota-brand { font-family: var(--font2); font-size: 20px; font-weight: 700; color: var(--red-light); }
+.nota-kanji { font-family: var(--font2); font-size: 14px; color: var(--text3); margin-top: 2px; }
+.nota-divider { border: none; border-top: 1px dashed var(--border2); margin: 10px 0; }
+.nota-row { display: flex; justify-content: space-between; padding: 3px 0; }
+.nota-row span:first-child { color: var(--text3); }
+.nota-row span:last-child { font-weight: 500; text-align: right; max-width: 60%; }
+.nota-total-row { display: flex; justify-content: space-between; padding: 5px 0; }
+.nota-total-row span:first-child { font-weight: 700; font-size: 13px; }
+.nota-total-row span:last-child { font-weight: 700; font-size: 15px; color: var(--red-light); }
+.nota-footer { text-align: center; color: var(--text3); font-size: 11px; margin-top: 10px; }
+.nota-qr {
+  width: 50px; height: 50px; margin: 10px auto;
+  background:
+    repeating-linear-gradient(0deg, var(--border2), var(--border2) 5px, transparent 5px, transparent 10px),
+    repeating-linear-gradient(90deg, var(--border2), var(--border2) 5px, transparent 5px, transparent 10px);
+  border: 2px solid var(--border2); border-radius: 6px;
+}
+
+/* ─────────────────────────────────────────
+   PRINT STYLES — full single page
+───────────────────────────────────────── */
+@media print {
+  @page {
+    size: 80mm auto;
+    margin: 0;
+  }
+
+  html, body {
+    width: 80mm;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #fff !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* Hide everything */
+  body > *:not(#nota-print-wrapper) { display: none !important; }
+
+  /* Show only the print wrapper */
+  #nota-print-wrapper {
+    display: block !important;
+    position: static !important;
+    width: 80mm !important;
+    min-height: unset !important;
+    margin: 0 !important;
+    padding: 6mm 8mm 10mm !important;
+    background: #fff !important;
+    color: #000 !important;
+    font-family: 'Noto Sans JP', 'Courier New', monospace !important;
+    font-size: 10pt !important;
+    line-height: 1.5 !important;
+    page-break-after: avoid !important;
+    page-break-inside: avoid !important;
+  }
+
+  #nota-print-wrapper .nota-brand { color: #c00 !important; font-size: 14pt !important; }
+  #nota-print-wrapper .nota-kanji { color: #555 !important; font-size: 10pt !important; }
+  #nota-print-wrapper .nota-row span:first-child { color: #555 !important; }
+  #nota-print-wrapper .nota-row span:last-child { color: #000 !important; }
+  #nota-print-wrapper .nota-total-row span:first-child { color: #000 !important; font-size: 11pt !important; }
+  #nota-print-wrapper .nota-total-row span:last-child { color: #c00 !important; font-size: 13pt !important; }
+  #nota-print-wrapper .nota-divider { border-top: 1px dashed #999 !important; }
+  #nota-print-wrapper .nota-footer { color: #555 !important; font-size: 9pt !important; }
+  #nota-print-wrapper .nota-qr {
+    background: repeating-linear-gradient(0deg,#ccc,#ccc 3px,transparent 3px,transparent 6px),
+                repeating-linear-gradient(90deg,#ccc,#ccc 3px,transparent 3px,transparent 6px) !important;
+    border: 1.5px solid #999 !important;
+  }
+}
+
+/* ─────────────────────────────────────────
+   RESPONSIVE
+───────────────────────────────────────── */
+@media (max-width: 600px) {
+  .form-row { grid-template-columns: 1fr; }
+  .form-row.triple { grid-template-columns: 1fr 1fr; }
+  .stats-grid { grid-template-columns: repeat(2, 1fr); }
+  .header-inner { gap: 8px; }
+  .brand-name { font-size: 13px; }
+  .clock-time { font-size: 13px; }
+  th, td { padding: 9px 8px; }
+}
+@media (max-width: 400px) {
+  .form-row.triple { grid-template-columns: 1fr; }
+  .stats-grid { grid-template-columns: 1fr 1fr; }
+}
+</style>
+</head>
+<body>
+
+<!-- BG LAYERS -->
+<div class="bg-layer"></div>
+<div class="bg-pattern"></div>
+<div class="sakura-container" id="sakuraContainer"></div>
+
+<!-- LOADING SCREEN -->
+<div id="loading-screen">
+  <div class="loading-kanji">洗</div>
+  <div class="loading-text">Memuat Aplikasi...</div>
+</div>
+
+<!-- TOAST CONTAINER -->
+<div id="toast-container"></div>
+
+<!-- HIDDEN PRINT WRAPPER (only visible during print) -->
+<div id="nota-print-wrapper" style="display:none">
+  <div class="nota-body" id="notaPrintBody"></div>
+</div>
+
+<!-- NOTA MODAL -->
+<div class="modal-overlay" id="notaModal">
+  <div class="modal-box">
+    <div class="modal-close">
+      <button class="btn btn-ghost btn-sm" onclick="closeModal()">✕ Tutup</button>
+      <button class="btn btn-primary btn-sm" onclick="doPrint()" style="margin-left:8px">🖨️ Print PDF</button>
+    </div>
+    <div id="print-area">
+      <div class="nota-body" id="notaContent"></div>
+    </div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+
+  <!-- HEADER -->
+  <header class="site-header">
+    <div class="header-inner">
+      <div class="brand-mark">洗</div>
+      <div class="brand-info">
+        <div class="brand-name">Sen Takuya Laundry</div>
+        <div class="brand-sub">洗濯屋センタクヤ</div>
+      </div>
+      <div class="header-right">
+        <div class="clock-box">
+          <div class="clock-time" id="clockTime">--:--:--</div>
+          <div id="clockDate" style="font-size:10px;color:var(--text3)"></div>
+        </div>
+        <span class="status-badge" id="shopStatus">--</span>
+        <button class="dark-toggle" id="darkToggle" title="Toggle Theme">🌙</button>
+      </div>
+    </div>
+    <!-- TABS -->
+    <nav class="nav-tabs" id="navTabs">
+      <div class="nav-tab active" data-tab="dashboard">🏠 Dashboard</div>
+      <div class="nav-tab" data-tab="transaksi">➕ Transaksi Baru</div>
+      <div class="nav-tab" data-tab="orders">📋 Daftar Order <span class="tab-badge" id="orderBadge">0</span></div>
+    </nav>
+  </header>
+
+  <!-- MAIN -->
+  <main class="main">
+
+    <!-- ── DASHBOARD ── -->
+    <section class="tab-panel active" id="tab-dashboard">
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-icon">🧾</div>
+          <div class="stat-value" id="stat-total">0</div>
+          <div class="stat-label">Total Transaksi</div>
+        </div>
+        <div class="stat-card highlight">
+          <div class="stat-icon">💴</div>
+          <div class="stat-value" id="stat-revenue">Rp 0</div>
+          <div class="stat-label">Total Pendapatan</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">⏳</div>
+          <div class="stat-value" id="stat-proses">0</div>
+          <div class="stat-label">Sedang Diproses</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">✅</div>
+          <div class="stat-value" id="stat-selesai">0</div>
+          <div class="stat-label">Selesai</div>
+        </div>
+      </div>
+
+      <!-- Recent transactions -->
+      <div class="section-head">
+        <span class="section-title">Transaksi Terbaru</span>
+        <div class="section-line"></div>
+        <span class="section-tag">最近</span>
+      </div>
+      <div id="recentList" class="recent-list">
+        <div class="empty-state">
+          <div class="empty-icon">🧺</div>
+          <div class="empty-title">Belum ada transaksi</div>
+          <div class="empty-sub">Tambahkan transaksi pertama Anda</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── TRANSAKSI BARU ── -->
+    <section class="tab-panel" id="tab-transaksi">
+      <div class="section-head">
+        <span class="section-title">Transaksi Baru</span>
+        <div class="section-line"></div>
+        <span class="section-tag">新規注文</span>
+      </div>
+      <div class="form-card">
+
+        <div class="form-row">
+          <div class="field">
+            <label>👤 Nama Pelanggan</label>
+            <input type="text" id="fNama" placeholder="Masukkan nama..." autocomplete="off">
+          </div>
+          <div class="field">
+            <label>📱 No. WhatsApp</label>
+            <input type="tel" id="fWa" placeholder="08xxxxxxxxxx" autocomplete="off">
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="field">
+            <label>🧺 Jenis Laundry</label>
+            <select id="fJenis" onchange="updateEstimasi()">
+              <option value="">-- Pilih Jenis --</option>
+              <option value="Cuci Kering">Cuci Kering</option>
+              <option value="Cuci Setrika">Cuci Setrika</option>
+              <option value="Setrika">Setrika</option>
+              <option value="Express">Express (1 Hari)</option>
+              <option value="Bed Cover">Bed Cover</option>
+              <option value="Karpet">Karpet</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>⚖️ Berat (kg)</label>
+            <input type="number" id="fBerat" placeholder="0.0" min="0" step="0.1" oninput="hitung()">
+          </div>
+        </div>
+
+        <div class="form-row triple">
+          <div class="field">
+            <label>💴 Harga / kg</label>
+            <input type="number" id="fHarga" placeholder="7000" min="0" oninput="hitung()">
+          </div>
+          <div class="field">
+            <label>🏷️ Diskon (%)</label>
+            <input type="number" id="fDiskon" placeholder="0" min="0" max="100" oninput="hitung()">
+          </div>
+          <div class="field">
+            <label>📅 Tgl Masuk</label>
+            <div class="readonly-val" id="fTglMasuk">—</div>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="field">
+            <label>⏰ Estimasi Selesai</label>
+            <input type="datetime-local" id="fEstimasi">
+          </div>
+          <div class="field">
+            <label>📝 Catatan</label>
+            <input type="text" id="fCatatan" placeholder="Catatan tambahan...">
+          </div>
+        </div>
+
+        <!-- Summary -->
+        <div class="calc-summary">
+          <div class="calc-row"><span>Subtotal</span><span id="calcSubtotal">Rp 0</span></div>
+          <div class="calc-row"><span>Diskon</span><span id="calcDiskon" style="color:var(--red-light)">- Rp 0</span></div>
+          <hr class="calc-divider">
+          <div class="calc-row total"><span>TOTAL BAYAR</span><span id="calcTotal">Rp 0</span></div>
+        </div>
+
+        <!-- Buttons -->
+        <div class="btn-row">
+          <button class="btn btn-primary" onclick="simpanTransaksi()">💾 Simpan</button>
+          <button class="btn btn-ghost" onclick="resetForm()">🔄 Reset</button>
+          <button class="btn btn-green" onclick="generateWA('proses')" id="btnWaPreview">📲 WA Konfirmasi</button>
+          <button class="btn btn-blue btn-sm" onclick="printFromForm()">🖨️ Print PDF</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── DAFTAR ORDER ── -->
+    <section class="tab-panel" id="tab-orders">
+      <div class="section-head">
+        <span class="section-title">Daftar Order</span>
+        <div class="section-line"></div>
+        <span class="section-tag">注文一覧</span>
+      </div>
+
+      <!-- Filters -->
+      <div class="filter-bar">
+        <input type="text" id="searchInput" placeholder="🔍 Cari nama, jenis..." oninput="renderTable()">
+        <select id="filterStatus" onchange="renderTable()">
+          <option value="">Semua Status</option>
+          <option value="Diproses">Diproses</option>
+          <option value="Dicuci">Dicuci</option>
+          <option value="Selesai">Selesai</option>
+          <option value="Diambil">Diambil</option>
+        </select>
+        <div class="filter-date-group">
+          <label>Dari:</label>
+          <input type="date" id="filterFrom" onchange="renderTable()" style="width:auto">
+        </div>
+        <div class="filter-date-group">
+          <label>s/d:</label>
+          <input type="date" id="filterTo" onchange="renderTable()" style="width:auto">
+        </div>
+        <button class="btn btn-ghost btn-sm" onclick="resetDateFilter()">Reset Tanggal</button>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Nama</th>
+              <th>Jenis</th>
+              <th>Berat</th>
+              <th>Total</th>
+              <th>Status</th>
+              <th>Aksi</th>
+            </tr>
+          </thead>
+          <tbody id="orderTableBody"></tbody>
+        </table>
+        <div id="orderEmpty" class="empty-state" style="display:none">
+          <div class="empty-icon">🧺</div>
+          <div class="empty-title">Tidak ada order ditemukan</div>
+          <div class="empty-sub">Coba ubah filter pencarian</div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- FOOTER -->
+  <footer class="site-footer">
+    <div class="footer-kanji">ありがとうございます</div>
+    <div class="footer-text">Arigatou Gozaimasu — Terima kasih telah mempercayakan laundry Anda</div>
+    <div class="footer-copy">© 2025 Sen Takuya Laundry • 洗濯屋センタクヤ</div>
+  </footer>
+
+</div><!-- #app -->
+
+<script>
+/* ═══════════════════════════════════════════
+   DATA & STORAGE
+═══════════════════════════════════════════ */
+const STORAGE_KEY = 'sentakuya_orders_v2';
+
+function loadOrders() {
+  try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; }
+  catch { return []; }
+}
+function saveOrders(orders) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(orders));
+}
+let orders = loadOrders();
+
+/* ═══════════════════════════════════════════
+   SAKURA PETALS
+═══════════════════════════════════════════ */
+(function spawnPetals() {
+  const container = document.getElementById('sakuraContainer');
+  const count = window.innerWidth > 600 ? 10 : 6;
+  for (let i = 0; i < count; i++) {
+    const p = document.createElement('div');
+    p.className = 'petal';
+    p.style.left = Math.random() * 100 + '%';
+    p.style.width = p.style.height = (8 + Math.random() * 8) + 'px';
+    p.style.animationDuration = (8 + Math.random() * 12) + 's';
+    p.style.animationDelay = (Math.random() * 15) + 's';
+    container.appendChild(p);
+  }
+})();
+
+/* ═══════════════════════════════════════════
+   CLOCK & STATUS
+═══════════════════════════════════════════ */
+function updateClock() {
+  const now = new Date();
+  document.getElementById('clockTime').textContent =
+    now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  document.getElementById('clockDate').textContent =
+    now.toLocaleDateString('id-ID', { weekday: 'short', day: '2-digit', month: 'short' });
+  const h = now.getHours();
+  const open = h >= 7 && h < 21;
+  const el = document.getElementById('shopStatus');
+  el.textContent = open ? '🟢 Buka' : '🔴 Tutup';
+  el.className = 'status-badge ' + (open ? 'status-open' : 'status-closed');
+}
+setInterval(updateClock, 1000);
+updateClock();
+
+/* ═══════════════════════════════════════════
+   DARK MODE
+═══════════════════════════════════════════ */
+let isLight = localStorage.getItem('sentakuya_light') === '1';
+function applyTheme() {
+  document.body.classList.toggle('light-mode', isLight);
+  document.getElementById('darkToggle').textContent = isLight ? '☀️' : '🌙';
+}
+document.getElementById('darkToggle').onclick = () => {
+  isLight = !isLight;
+  localStorage.setItem('sentakuya_light', isLight ? '1' : '0');
+  applyTheme();
+};
+applyTheme();
+
+/* ═══════════════════════════════════════════
+   TABS
+═══════════════════════════════════════════ */
+document.querySelectorAll('.nav-tab').forEach(tab => {
+  tab.onclick = () => {
+    document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    tab.classList.add('active');
+    document.getElementById('tab-' + tab.dataset.tab).classList.add('active');
+    if (tab.dataset.tab === 'orders') renderTable();
+    if (tab.dataset.tab === 'dashboard') renderDashboard();
+  };
+});
+
+/* ═══════════════════════════════════════════
+   TOAST
+═══════════════════════════════════════════ */
+function toast(msg, type = 'success') {
+  const tc = document.getElementById('toast-container');
+  const t = document.createElement('div');
+  t.className = `toast toast-${type}`;
+  t.innerHTML = `<span class="toast-icon"></span><span>${msg}</span>`;
+  tc.appendChild(t);
+  setTimeout(() => { t.classList.add('hide'); setTimeout(() => t.remove(), 400); }, 3000);
+}
+
+/* ═══════════════════════════════════════════
+   SOUND EFFECT (Web Audio API)
+═══════════════════════════════════════════ */
+let audioCtx = null;
+function playClick() {
+  try {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.connect(gain); gain.connect(audioCtx.destination);
+    osc.frequency.setValueAtTime(880, audioCtx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(440, audioCtx.currentTime + 0.06);
+    gain.gain.setValueAtTime(0.08, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.1);
+    osc.start(); osc.stop(audioCtx.currentTime + 0.12);
+  } catch {}
+}
+document.addEventListener('click', e => {
+  if (e.target.closest('.btn')) playClick();
+});
+
+/* ═══════════════════════════════════════════
+   UTILITIES
+═══════════════════════════════════════════ */
+function rupiah(n) {
+  return 'Rp ' + Math.round(n).toLocaleString('id-ID');
+}
+function genId() {
+  return 'TRX' + Date.now().toString(36).toUpperCase();
+}
+function fmtDate(iso) {
+  if (!iso) return '—';
+  const d = new Date(iso);
+  return d.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' });
+}
+function fmtDateTime(iso) {
+  if (!iso) return '—';
+  const d = new Date(iso);
+  return d.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' })
+    + ' ' + d.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+}
+
+/* ═══════════════════════════════════════════
+   ESTIMASI LOGIC
+═══════════════════════════════════════════ */
+const ESTIMASI_HARI = {
+  'Cuci Kering': 2,
+  'Cuci Setrika': 3,
+  'Setrika': 1,
+  'Express': 1,
+  'Bed Cover': 3,
+  'Karpet': 4,
+};
+const HARGA_DEFAULT = {
+  'Cuci Kering': 7000,
+  'Cuci Setrika': 10000,
+  'Setrika': 5000,
+  'Express': 15000,
+  'Bed Cover': 35000,
+  'Karpet': 25000,
+};
+
+function updateEstimasi() {
+  const jenis = document.getElementById('fJenis').value;
+  if (!jenis) return;
+  // Set default harga
+  if (HARGA_DEFAULT[jenis]) {
+    document.getElementById('fHarga').value = HARGA_DEFAULT[jenis];
+  }
+  // Set estimasi
+  const hari = ESTIMASI_HARI[jenis] || 2;
+  const est = new Date();
+  est.setHours(17, 0, 0, 0);
+  est.setDate(est.getDate() + hari);
+  document.getElementById('fEstimasi').value = est.toISOString().slice(0, 16);
+  hitung();
+}
+
+function setTanggalMasuk() {
+  const now = new Date();
+  document.getElementById('fTglMasuk').textContent =
+    now.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+}
+setTanggalMasuk();
+
+/* ═══════════════════════════════════════════
+   PERHITUNGAN OTOMATIS
+═══════════════════════════════════════════ */
+function hitung() {
+  const berat = parseFloat(document.getElementById('fBerat').value) || 0;
+  const harga = parseFloat(document.getElementById('fHarga').value) || 0;
+  const diskon = parseFloat(document.getElementById('fDiskon').value) || 0;
+  const sub = berat * harga;
+  const disc = sub * (diskon / 100);
+  const total = sub - disc;
+  document.getElementById('calcSubtotal').textContent = rupiah(sub);
+  document.getElementById('calcDiskon').textContent = '- ' + rupiah(disc);
+  document.getElementById('calcTotal').textContent = rupiah(total);
+}
+
+/* ═══════════════════════════════════════════
+   FORM — RESET & SAVE
+═══════════════════════════════════════════ */
+function resetForm() {
+  ['fNama','fWa','fBerat','fHarga','fCatatan'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('fJenis').value = '';
+  document.getElementById('fDiskon').value = '';
+  document.getElementById('fEstimasi').value = '';
+  hitung();
+  setTanggalMasuk();
+  document.getElementById('fNama').focus();
+  toast('Form direset', 'info');
+}
+
+function simpanTransaksi() {
+  const nama = document.getElementById('fNama').value.trim();
+  const wa = document.getElementById('fWa').value.trim();
+  const jenis = document.getElementById('fJenis').value;
+  const berat = parseFloat(document.getElementById('fBerat').value);
+  const harga = parseFloat(document.getElementById('fHarga').value);
+  const diskon = parseFloat(document.getElementById('fDiskon').value) || 0;
+  const catatan = document.getElementById('fCatatan').value.trim();
+  const estimasi = document.getElementById('fEstimasi').value;
+
+  if (!nama) { toast('Nama pelanggan wajib diisi!', 'error'); document.getElementById('fNama').focus(); return; }
+  if (!jenis) { toast('Pilih jenis laundry!', 'error'); document.getElementById('fJenis').focus(); return; }
+  if (!berat || berat <= 0) { toast('Berat harus lebih dari 0!', 'error'); document.getElementById('fBerat').focus(); return; }
+  if (!harga || harga <= 0) { toast('Harga/kg wajib diisi!', 'error'); document.getElementById('fHarga').focus(); return; }
+
+  const sub = berat * harga;
+  const disc = sub * (diskon / 100);
+  const total = sub - disc;
+
+  const order = {
+    id: genId(),
+    nama, wa, jenis, berat, harga, diskon,
+    subtotal: sub, diskon_rp: disc, total,
+    catatan, estimasi,
+    tgl_masuk: new Date().toISOString(),
+    status: 'Diproses',
+  };
+
+  orders.unshift(order);
+  saveOrders(orders);
+  renderDashboard();
+  updateBadge();
+  toast(`✅ Transaksi ${nama} tersimpan!`);
+  resetForm();
+
+  // Auto switch ke tab orders
+  setTimeout(() => {
+    document.querySelector('[data-tab="dashboard"]').click();
+  }, 500);
+}
+
+/* ═══════════════════════════════════════════
+   WHATSAPP
+═══════════════════════════════════════════ */
+function buildWAMessage(order, type = 'proses') {
+  const est = order.estimasi ? fmtDateTime(order.estimasi) : '—';
+  if (type === 'proses') {
+    return `Halo *${order.nama}* 🙏\n\nTerima kasih telah menggunakan layanan *Sen Takuya Laundry* ✨\n\nBerikut detail transaksi Anda:\n\n📋 *Detail Transaksi*\n━━━━━━━━━━━━━━━━━\n🧺 Jenis Laundry  : ${order.jenis}\n⚖️ Berat           : ${order.berat} kg\n💴 Harga/kg       : ${rupiah(order.harga)}\n🏷️ Diskon         : ${order.diskon}%\n💰 *Total Bayar   : ${rupiah(order.total)}*\n⏰ Estimasi Selesai: ${est}\n━━━━━━━━━━━━━━━━━\n\nLaundry Anda sedang *kami proses* dengan penuh perhatian. Kami akan memberitahu Anda saat sudah selesai 😊\n\n_Arigatou Gozaimasu_ 🌸\n*Sen Takuya Laundry*`;
+  } else if (type === 'selesai') {
+    return `Halo *${order.nama}* 🙏\n\n*Laundry Anda sudah selesai!* ✅🎉\n\nBerikut detail transaksi Anda:\n\n📋 *Detail Transaksi*\n━━━━━━━━━━━━━━━━━\n🧺 Jenis Laundry  : ${order.jenis}\n⚖️ Berat           : ${order.berat} kg\n💰 *Total Bayar   : ${rupiah(order.total)}*\n━━━━━━━━━━━━━━━━━\n\nSilakan diambil kapan saja di toko kami ya 😊\nKami tunggu kehadiran Anda!\n\n_Arigatou Gozaimasu_ 🌸\n*Sen Takuya Laundry*`;
+  }
+  return '';
+}
+
+function generateWA(type = 'proses') {
+  const nama = document.getElementById('fNama').value.trim();
+  const wa = document.getElementById('fWa').value.trim();
+  const jenis = document.getElementById('fJenis').value;
+  const berat = parseFloat(document.getElementById('fBerat').value) || 0;
+  const harga = parseFloat(document.getElementById('fHarga').value) || 0;
+  const diskon = parseFloat(document.getElementById('fDiskon').value) || 0;
+  const estimasi = document.getElementById('fEstimasi').value;
+
+  if (!wa) { toast('No. WhatsApp pelanggan wajib diisi!', 'error'); document.getElementById('fWa').focus(); return; }
+  if (!nama) { toast('Nama pelanggan wajib diisi!', 'error'); document.getElementById('fNama').focus(); return; }
+
+  const sub = berat * harga;
+  const disc = sub * (diskon / 100);
+  const total = sub - disc;
+  const order = { nama, wa, jenis, berat, harga, diskon, subtotal: sub, diskon_rp: disc, total, estimasi };
+
+  const msg = buildWAMessage(order, type);
+  const phone = wa.replace(/\D/g, '').replace(/^0/, '62');
+  window.open(`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`, '_blank');
+}
+
+function generateWAFromOrder(orderId, type) {
+  const order = orders.find(o => o.id === orderId);
+  if (!order) return;
+  const msg = buildWAMessage(order, type);
+  const phone = (order.wa || '').replace(/\D/g, '').replace(/^0/, '62');
+  if (!phone) { toast('No. WA tidak tersedia', 'warn'); return; }
+  window.open(`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`, '_blank');
+}
+
+function copyWA() {
+  const wa = document.getElementById('fWa').value.trim();
+  if (!wa) { toast('No. WA kosong', 'warn'); return; }
+  const phone = wa.replace(/\D/g, '').replace(/^0/, '62');
+  navigator.clipboard.writeText(phone).then(() => toast('Nomor WA disalin!')).catch(() => toast('Gagal menyalin', 'error'));
+}
+
+/* ═══════════════════════════════════════════
+   PRINT NOTA
+═══════════════════════════════════════════ */
+function openNota(orderId) {
+  const order = orders.find(o => o.id === orderId);
+  if (!order) return;
+  const html = buildNotaHTML(order);
+  document.getElementById('notaContent').innerHTML = html;
+  document.getElementById('notaModal').classList.add('open');
+}
+
+function closeModal() {
+  document.getElementById('notaModal').classList.remove('open');
+}
+document.getElementById('notaModal').addEventListener('click', function(e) {
+  if (e.target === this) closeModal();
+});
+
+function buildNotaHTML(order) {
+  return `
+    <div class="nota-header">
+      <div class="nota-brand">Sen Takuya Laundry</div>
+      <div class="nota-kanji">洗濯屋センタクヤ</div>
+      <div style="font-size:9pt;color:#555;margin-top:3px">${fmtDateTime(order.tgl_masuk)}</div>
+      <div style="font-size:9pt;color:#555">No: ${order.id || '—'}</div>
+    </div>
+    <hr class="nota-divider">
+    <div class="nota-row"><span>Nama</span><span>${order.nama}</span></div>
+    <div class="nota-row"><span>No. WA</span><span>${order.wa || '—'}</span></div>
+    <div class="nota-row"><span>Jenis</span><span>${order.jenis}</span></div>
+    <div class="nota-row"><span>Berat</span><span>${order.berat} kg</span></div>
+    <div class="nota-row"><span>Harga/kg</span><span>${rupiah(order.harga)}</span></div>
+    ${order.diskon ? `<div class="nota-row"><span>Diskon</span><span>${order.diskon}%</span></div>` : ''}
+    ${order.catatan ? `<div class="nota-row"><span>Catatan</span><span>${order.catatan}</span></div>` : ''}
+    <div class="nota-row"><span>Est. Selesai</span><span>${fmtDateTime(order.estimasi)}</span></div>
+    <hr class="nota-divider">
+    <div class="nota-row"><span>Subtotal</span><span>${rupiah(order.subtotal || order.berat * order.harga)}</span></div>
+    ${order.diskon ? `<div class="nota-row"><span>Diskon</span><span>- ${rupiah(order.diskon_rp || 0)}</span></div>` : ''}
+    <hr class="nota-divider">
+    <div class="nota-total-row"><span>TOTAL BAYAR</span><span>${rupiah(order.total)}</span></div>
+    <hr class="nota-divider">
+    <div class="nota-qr"></div>
+    <div class="nota-footer">
+      Status: ${order.status || '—'}<br>
+      ありがとうございます<br>
+      Arigatou Gozaimasu 🌸<br>
+      Sen Takuya Laundry
+    </div>
+  `;
+}
+
+function doPrint() {
+  // Sync content to hidden print wrapper then print
+  const content = document.getElementById('notaContent').innerHTML;
+  document.getElementById('notaPrintBody').innerHTML = content;
+  closeModal();
+  setTimeout(() => { window.print(); }, 120);
+}
+
+function printFromForm() {
+  const nama = document.getElementById('fNama').value.trim();
+  const wa = document.getElementById('fWa').value.trim();
+  const jenis = document.getElementById('fJenis').value;
+  const berat = parseFloat(document.getElementById('fBerat').value) || 0;
+  const harga = parseFloat(document.getElementById('fHarga').value) || 0;
+  const diskon = parseFloat(document.getElementById('fDiskon').value) || 0;
+  const catatan = document.getElementById('fCatatan').value.trim();
+  const estimasi = document.getElementById('fEstimasi').value;
+
+  if (!nama) { toast('Isi nama pelanggan dulu!', 'error'); return; }
+  if (!jenis) { toast('Pilih jenis laundry dulu!', 'error'); return; }
+
+  const sub = berat * harga;
+  const disc = sub * (diskon / 100);
+  const total = sub - disc;
+  const order = {
+    id: '(Preview)',
+    nama, wa, jenis, berat, harga, diskon,
+    subtotal: sub, diskon_rp: disc, total,
+    catatan, estimasi,
+    tgl_masuk: new Date().toISOString(),
+    status: 'Diproses',
+  };
+  document.getElementById('notaPrintBody').innerHTML = buildNotaHTML(order);
+  setTimeout(() => { window.print(); }, 80);
+}
+
+/* ═══════════════════════════════════════════
+   STATUS UPDATE & DELETE
+═══════════════════════════════════════════ */
+function updateStatus(id, val) {
+  const o = orders.find(x => x.id === id);
+  if (!o) return;
+  o.status = val;
+  saveOrders(orders);
+  renderTable();
+  renderDashboard();
+  toast(`Status diubah → ${val}`);
+}
+
+function hapusOrder(id) {
+  if (!confirm('Hapus transaksi ini?')) return;
+  orders = orders.filter(x => x.id !== id);
+  saveOrders(orders);
+  renderTable();
+  renderDashboard();
+  updateBadge();
+  toast('Transaksi dihapus', 'warn');
+}
+
+/* ═══════════════════════════════════════════
+   BADGE
+═══════════════════════════════════════════ */
+function updateBadge() {
+  const active = orders.filter(o => o.status !== 'Diambil').length;
+  document.getElementById('orderBadge').textContent = active;
+}
+
+/* ═══════════════════════════════════════════
+   DATE FILTER DEFAULTS
+═══════════════════════════════════════════ */
+function initDateFilter() {
+  const today = new Date();
+  const weekAgo = new Date(today);
+  weekAgo.setDate(today.getDate() - 7);
+  document.getElementById('filterTo').value = today.toISOString().split('T')[0];
+  document.getElementById('filterFrom').value = weekAgo.toISOString().split('T')[0];
+}
+function resetDateFilter() {
+  initDateFilter();
+  renderTable();
+  toast('Filter tanggal direset', 'info');
+}
+initDateFilter();
+
+/* ═══════════════════════════════════════════
+   RENDER TABLE
+═══════════════════════════════════════════ */
+function getStatusClass(s) {
+  const map = { 'Diproses': 'diproses', 'Dicuci': 'dicuci', 'Selesai': 'selesai', 'Diambil': 'diambil' };
+  return map[s] || 'diproses';
+}
+function getStatusProgress(s) {
+  return `<div class="progress-wrap"><div class="progress-bar"><div class="progress-fill p-${getStatusClass(s)}"></div></div></div>`;
+}
+function getStatusEmoji(s) {
+  const m = { 'Diproses': '⏳', 'Dicuci': '🫧', 'Selesai': '✅', 'Diambil': '📦' };
+  return m[s] || '⏳';
+}
+
+function renderTable() {
+  const search = document.getElementById('searchInput').value.toLowerCase();
+  const filterStatus = document.getElementById('filterStatus').value;
+  const filterFrom = document.getElementById('filterFrom').value;
+  const filterTo = document.getElementById('filterTo').value;
+
+  let filtered = orders.filter(o => {
+    const matchSearch = !search || o.nama.toLowerCase().includes(search) || o.jenis.toLowerCase().includes(search) || o.id.toLowerCase().includes(search);
+    const matchStatus = !filterStatus || o.status === filterStatus;
+    let matchDate = true;
+    if (filterFrom || filterTo) {
+      const tgl = o.tgl_masuk ? o.tgl_masuk.split('T')[0] : '';
+      if (filterFrom && tgl < filterFrom) matchDate = false;
+      if (filterTo && tgl > filterTo) matchDate = false;
+    }
+    return matchSearch && matchStatus && matchDate;
+  });
+
+  const tbody = document.getElementById('orderTableBody');
+  const empty = document.getElementById('orderEmpty');
+
+  if (filtered.length === 0) {
+    tbody.innerHTML = '';
+    empty.style.display = 'block';
+    return;
+  }
+  empty.style.display = 'none';
+
+  tbody.innerHTML = filtered.map((o, i) => `
+    <tr>
+      <td style="color:var(--text3);font-size:11px">${i+1}</td>
+      <td>
+        <div class="td-name">${o.nama}</div>
+        <div style="font-size:10px;color:var(--text3)">${fmtDate(o.tgl_masuk)}</div>
+      </td>
+      <td>${o.jenis}</td>
+      <td>${o.berat} kg</td>
+      <td class="td-total">${rupiah(o.total)}</td>
+      <td>
+        <span class="badge badge-${getStatusClass(o.status)}">${getStatusEmoji(o.status)} ${o.status}</span>
+        ${getStatusProgress(o.status)}
+        <select class="status-select badge badge-${getStatusClass(o.status)}" style="margin-top:4px" onchange="updateStatus('${o.id}', this.value)">
+          <option ${o.status==='Diproses'?'selected':''}>Diproses</option>
+          <option ${o.status==='Dicuci'?'selected':''}>Dicuci</option>
+          <option ${o.status==='Selesai'?'selected':''}>Selesai</option>
+          <option ${o.status==='Diambil'?'selected':''}>Diambil</option>
+        </select>
+      </td>
+      <td>
+        <div class="actions-cell">
+          <button class="btn btn-ghost btn-icon btn-sm" title="Print Nota" onclick="openNota('${o.id}')">🖨️</button>
+          <button class="btn btn-green btn-icon btn-sm" title="WA Proses" onclick="generateWAFromOrder('${o.id}','proses')">📲</button>
+          ${o.status==='Selesai'||o.status==='Diambil' ? `<button class="btn btn-blue btn-icon btn-sm" title="WA Selesai" onclick="generateWAFromOrder('${o.id}','selesai')">✅</button>` : ''}
+          <button class="btn btn-ghost btn-icon btn-sm" title="Hapus" onclick="hapusOrder('${o.id}')" style="color:var(--red-light)">🗑️</button>
+        </div>
+      </td>
+    </tr>
+  `).join('');
+}
+
+/* ═══════════════════════════════════════════
+   DASHBOARD RENDER
+═══════════════════════════════════════════ */
+function renderDashboard() {
+  const total = orders.length;
+  const revenue = orders.reduce((s, o) => s + (o.total || 0), 0);
+  const proses = orders.filter(o => o.status === 'Diproses' || o.status === 'Dicuci').length;
+  const selesai = orders.filter(o => o.status === 'Selesai' || o.status === 'Diambil').length;
+
+  document.getElementById('stat-total').textContent = total;
+  document.getElementById('stat-revenue').textContent = rupiah(revenue);
+  document.getElementById('stat-proses').textContent = proses;
+  document.getElementById('stat-selesai').textContent = selesai;
+  updateBadge();
+
+  const recents = orders.slice(0, 6);
+  const listEl = document.getElementById('recentList');
+  if (recents.length === 0) {
+    listEl.innerHTML = `<div class="empty-state"><div class="empty-icon">🧺</div><div class="empty-title">Belum ada transaksi</div><div class="empty-sub">Tambahkan transaksi pertama Anda</div></div>`;
+    return;
+  }
+  const icons = { 'Cuci Kering': '👕', 'Cuci Setrika': '👔', 'Setrika': '♨️', 'Express': '⚡', 'Bed Cover': '🛏️', 'Karpet': '🧹' };
+  listEl.innerHTML = recents.map(o => `
+    <div class="recent-item">
+      <div class="recent-icon">${icons[o.jenis] || '🧺'}</div>
+      <div class="recent-info">
+        <div class="recent-name">${o.nama}</div>
+        <div class="recent-meta">${o.jenis} · ${o.berat}kg · <span class="badge badge-${getStatusClass(o.status)}" style="padding:1px 6px;font-size:9px">${o.status}</span></div>
+      </div>
+      <div class="recent-amount">${rupiah(o.total)}</div>
+    </div>
+  `).join('');
+}
+
+/* ═══════════════════════════════════════════
+   KEYBOARD SHORTCUTS
+═══════════════════════════════════════════ */
+document.addEventListener('keydown', e => {
+  if (e.ctrlKey || e.metaKey) {
+    if (e.key === '1') { e.preventDefault(); document.querySelector('[data-tab="dashboard"]').click(); }
+    if (e.key === '2') { e.preventDefault(); document.querySelector('[data-tab="transaksi"]').click(); }
+    if (e.key === '3') { e.preventDefault(); document.querySelector('[data-tab="orders"]').click(); }
+    if (e.key === 's') { e.preventDefault(); simpanTransaksi(); }
+  }
+  if (e.key === 'Escape') closeModal();
+});
+
+/* ═══════════════════════════════════════════
+   INIT
+═══════════════════════════════════════════ */
+// Set tanggal masuk auto
+setTanggalMasuk();
+setInterval(setTanggalMasuk, 60000);
+
+// Init
+renderDashboard();
+renderTable();
+updateBadge();
+
+// Loading screen
+setTimeout(() => {
+  const ls = document.getElementById('loading-screen');
+  ls.classList.add('hide');
+  setTimeout(() => ls.remove(), 500);
+  document.getElementById('fNama').focus();
+}, 1200);
+
+// Hint
+console.log('%c洗濯屋 Sen Takuya%c\nShortcut: Ctrl+1/2/3 ganti tab, Ctrl+S simpan', 'color:#C8102E;font-size:18px;font-weight:bold', 'color:#666;font-size:12px');
+</script>
+</body>
+</html>
